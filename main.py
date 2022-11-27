@@ -11,17 +11,27 @@ WORK_MIN = 25
 SHORT_BREAK_MIN = 5
 LONG_BREAK_MIN = 20
 reps = 0
+timer = None
+marks = ""
 
 
 # ---------------------------- TIMER RESET ------------------------------- # 
+def reset_timer():
+    global reps
+    reps = 0
+    window.after_cancel(timer)
+    canvas.itemconfig(timer_text, text="00:00")
+    title_label.config(text="Timer", fg=GREEN)
+    check_marks.config(text="")
+
 
 # ---------------------------- TIMER MECHANISM ------------------------------- # 
 def start_timer():
     global reps
     reps += 1
-    work_sec = WORK_MIN
-    short_break_sec = SHORT_BREAK_MIN
-    long_break_sec = LONG_BREAK_MIN
+    work_sec = WORK_MIN * 60
+    short_break_sec = SHORT_BREAK_MIN * 60
+    long_break_sec = LONG_BREAK_MIN * 60
 
     if reps % 8 == 0:
         countdown(long_break_sec)
@@ -36,6 +46,7 @@ def start_timer():
 
 # ---------------------------- COUNTDOWN MECHANISM ------------------------------- # 
 def countdown(count):
+    global marks
     count_min = math.floor(count / 60)
     count_sec = count % 60
 
@@ -47,9 +58,16 @@ def countdown(count):
 
     canvas.itemconfig(timer_text, text=f"{count_min}:{count_sec}")
     if count > 0:
-        window.after(1000, countdown, count-1)
+        global timer
+        timer = window.after(1000, countdown, count-1)
     else:
         start_timer()
+        if reps % 2 == 0:
+            marks = ""
+            work_sessions = math.floor(reps/2)
+            for _ in range(work_sessions):
+                marks += "✔"
+                check_marks.config(text=marks)
 
 
 # ---------------------------- UI SETUP ------------------------------- #
@@ -70,10 +88,10 @@ canvas.grid(column=1, row=1)
 start_button = Button(text="Start", width=6, command=start_timer)
 start_button.grid(column=0, row=2)
 
-reset_button = Button(text="Reset", width=6)
+reset_button = Button(text="Reset", width=6, command=reset_timer)
 reset_button.grid(column=2, row=2)
 
-check_marks = Label(text="✔", fg=GREEN, bg=YELLOW, font=(FONT_NAME, 14, "bold"))
+check_marks = Label(fg=GREEN, bg=YELLOW, font=(FONT_NAME, 14, "bold"))
 check_marks.grid(column=1, row=3)
 
 window.mainloop()
